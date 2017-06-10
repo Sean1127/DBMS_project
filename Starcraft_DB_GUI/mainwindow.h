@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QMessageBox>
 #include <QtSql>
+#include <QSqlTableModel>
 #include "dialog.h"
 #include "sqledit.h"
 
@@ -23,6 +24,8 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+    void initComboButton();
+
 private slots:
     void on_actionNew_triggered();
 
@@ -34,12 +37,17 @@ private slots:
 
     void on_actionSave_triggered();
 
+    void on_pushButton_2_clicked();
+
+    void on_comboBox_currentIndexChanged(const QString &arg1);
+
     void on_pushButton_clicked();
 
 private:
     Ui::MainWindow *ui;
     QString path;
-    QSqlDatabase db;
+    QSqlDatabase database;
+    QSqlTableModel *tableModel;
     SQLEdit *SQLEditor;
 };
 
