@@ -27,21 +27,18 @@ public:
     void initComboButton();
 
 private slots:
-    void on_actionNew_triggered();
 
     void on_actionOpen_triggered();
 
     void on_actionExit_triggered();
 
-    void on_actionSave_as_triggered();
-
-    void on_actionSave_triggered();
-
     void on_pushButton_2_clicked();
 
-    void on_comboBox_currentIndexChanged(const QString &arg1);
-
     void on_pushButton_clicked();
+
+    void on_comboBox_activated(const QString &arg1);
+
+    void on_comboBox_2_activated(int index);
 
 private:
     Ui::MainWindow *ui;

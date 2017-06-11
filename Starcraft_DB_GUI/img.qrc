@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>wall2-1280x1024.jpg</file>
+        <file>wall1-1600x1200.jpg</file>
+    </qresource>
+</RCC>

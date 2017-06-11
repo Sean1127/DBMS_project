@@ -12,13 +12,13 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     SQLEditor = new SQLEdit();
+    SQLEditor->setFont(QFont("Courier 10 pitch",11));
     ui->verticalLayout_2->addWidget(SQLEditor);
 
     initComboButton();
 
     ui->comboBox_2->setMinimumWidth(ui->comboBox_2->minimumSizeHint().width());
-    ui->comboBox->setMinimumWidth(ui->comboBox_2->width());
-    ui->label_2->setMinimumWidth(50);
+    ui->pushButton_2->setMaximumWidth(80);
 }
 
 MainWindow::~MainWindow()
@@ -44,19 +44,15 @@ void MainWindow::initComboButton()
     ui->comboBox_2->addItem("HAVING");
 }
 
-void MainWindow::on_actionNew_triggered()
-{
-
-}
-
 void MainWindow::on_actionOpen_triggered()
 {
+    path = QFileDialog::getOpenFileName(this, tr("Open"), "/home/sean", tr("Database (*.db)"));
+
     if (database.isOpen()) {
         database.close();
-        database.removeDatabase("qt_sql_default_connection");
+        database = QSqlDatabase();
+        database.removeDatabase(QSqlDatabase::database().connectionName());
     }
-
-    path = QFileDialog::getOpenFileName(this, tr("Open"), "/home/sean", tr("Database (*.db)"));
 
     database = QSqlDatabase::addDatabase("QSQLITE");
     database.setDatabaseName(path);
@@ -65,23 +61,15 @@ void MainWindow::on_actionOpen_triggered()
         return;
     }
 
+    ui->comboBox->clear();
     ui->comboBox->addItems(database.tables());
-    ui->comboBox->setMinimumWidth(7);
+    ui->comboBox->setMinimumWidth(ui->comboBox->minimumSizeHint().width());
 }
 
 void MainWindow::on_actionExit_triggered()
 {
+    database.close();
     QMainWindow::close();
-}
-
-void MainWindow::on_actionSave_as_triggered()
-{
-    path = QFileDialog::getSaveFileName(this, tr("Save"), "/home/sean", tr("Database (*.db)"));
-}
-
-void MainWindow::on_actionSave_triggered()
-{
-
 }
 
 void MainWindow::on_pushButton_2_clicked()
@@ -94,7 +82,17 @@ void MainWindow::on_pushButton_2_clicked()
     ui->tableView_2->setModel(model);
 }
 
-void MainWindow::on_comboBox_currentIndexChanged(const QString &arg1)
+void MainWindow::on_pushButton_clicked()
+{
+    QSqlQuery query(database);
+    query.exec(ui->lineEdit_2->text());
+
+    QSqlQueryModel *model = new QSqlQueryModel();
+    model->setQuery(ui->lineEdit_2->text());
+    ui->tableView_1->setModel(model);
+}
+
+void MainWindow::on_comboBox_activated(const QString &arg1)
 {
     tableModel = new QSqlTableModel(this, database);
     tableModel->setTable(arg1);
@@ -104,18 +102,17 @@ void MainWindow::on_comboBox_currentIndexChanged(const QString &arg1)
     ui->tableView_1->setModel(tableModel);
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_comboBox_2_activated(int index)
 {
     QString str;
-    switch (ui->comboBox_2->currentIndex()) {
+    switch (index) {
     case 0:
         str = "SELECT Name,HP "
               "FROM UNIT "
               "WHERE Race='Zerg'";
         break;
     case 1:
-        str = "INSERT INTO BUILDING(ID,Name,Race,Cost_minerals,Cost_gas,Build_time,"
-              "HP,Def,Unlock_by,Build_by) "
+        str = "INSERT INTO BUILDING(ID,Name,Race,Cost_minerals,Cost_gas,Build_time,HP,Def,Unlock_by,Build_by) "
               "VALUES(18,'Spawning Pool','Zerg',200,0,50,750,1,17,19)";
         break;
     case 2:
@@ -123,46 +120,79 @@ void MainWindow::on_pushButton_clicked()
               "WHERE ID=18";
         break;
     case 3:
-        str = "UPDATE ";
+        str = "UPDATE UNIT "
+              "SET Energy=250 "
+              "WHERE ID=4";
         break;
     case 4:
-        str = "";
+        str = "SELECT * "
+              "FROM SPELL "
+              "WHERE Cast_by "
+              "IN(SELECT ID "
+              "FROM UNIT "
+              "WHERE Cost_gas=0)";
         break;
     case 5:
-        str = "";
+        str = "SELECT * "
+              "FROM SPELL "
+              "WHERE Cast_by "
+              "NOT IN(SELECT ID "
+              "FROM UNIT "
+              "WHERE Cost_gas=0)";
         break;
     case 6:
-        str = "";
+        str = "SELECT Name,HP,Shield "
+              "FROM BUILDING B "
+              "WHERE EXISTS"
+              "(SELECT * "
+              "FROM UPGRADE "
+              "WHERE Building_ID=B.ID)";
         break;
     case 7:
-        str = "";
+        str = "SELECT * "
+              "FROM COMMAND C "
+              "WHERE NOT EXISTS"
+              "(SELECT * "
+              "FROM UNIT "
+              "WHERE ID=C.Act_by)";
         break;
     case 8:
-        str = "";
+        str = "SELECT COUNT(*) "
+              "FROM UNIT "
+              "WHERE Shield IS NULL";
         break;
     case 9:
-        str = "";
+        str = "SELECT SUM(Cost_minerals),SUM(Cost_gas) "
+              "FROM UPGRADE "
+              "WHERE Name LIKE '%Air Weapon%'";
         break;
     case 10:
-        str = "";
+        str = "SELECT U.Name,S.* "
+              "FROM SPELL S,UNIT U "
+              "WHERE Cast_by=U.ID AND Radius IN"
+              "(SELECT MAX(Radius)"
+              "FROM SPELL)";
         break;
     case 11:
-        str = "";
+        str = "SELECT Name "
+              "FROM BUILDING "
+              "WHERE Build_time IN"
+              "(SELECT MIN(Build_time) "
+              "FROM BUILDING)";
         break;
     case 12:
-        str = "";
+        str = "SELECT AVG(U.Cost_minerals) "
+              "FROM UNIT U,BUILDING B "
+              "WHERE U.Produce_by=B.ID AND B.Name='Gateway'";
         break;
     case 13:
-        str = "";
+        str = "SELECT Size,COUNT(*) "
+              "FROM Unit "
+              "WHERE Atk_type_g>10 "
+              "GROUP BY Size "
+              "HAVING Type='Ground'";
         break;
     }
 
-    qDebug()<<str;
-
-    QSqlQuery query(database);
-    query.exec(str);
-
-    QSqlQueryModel *model = new QSqlQueryModel();
-    model->setQuery(str);
-    ui->tableView_1->setModel(model);
+    ui->lineEdit_2->setText(str);
 }
